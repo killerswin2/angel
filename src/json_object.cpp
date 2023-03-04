@@ -51,9 +51,11 @@ static void json_release_all_handles_generic(asIScriptGeneric *gen)
 
 static void json_push_back_generic(asIScriptGeneric *gen)
 {
+    asIScriptEngine *engine = gen->GetEngine();
     json_object *self = static_cast<json_object*>(gen->GetObject());
     int *number = static_cast<int*>(gen->GetArgAddress(0));
-    self->push_back(*number);
+    int refTypeId = gen->GetArgTypeId(0);
+    self->push_back(number, refTypeId);
 }
 
 static void json_print_generic(asIScriptGeneric *gen)
@@ -61,15 +63,24 @@ static void json_print_generic(asIScriptGeneric *gen)
     static_cast<json_object*>(gen->GetObject())->print();
 }
 
+static void json_assignment_generic(asIScriptGeneric *gen)
+{
+	json_object *other = static_cast<json_object*>(gen->GetArgObject(0));
+	json_object *self = static_cast<json_object*>(gen->GetObject());
+
+	*self = *other;
+
+	gen->SetReturnObject(self);
+}
+
 json_object::json_object(asIScriptEngine *&engine)
 {
-    std::cout << "Json Object created!\n";
     refCounter = 1;
-
     gcFlag = false;
 
     // Notify the garbage collector of this object
     engine->NotifyGarbageCollectorOfNewObject(this, engine->GetTypeInfoByName("json"));
+    scriptEngine = engine;
 }
 
 int json_object::add_ref() const
@@ -107,23 +118,41 @@ void json_object::set_flag() {
     gcFlag = true;
 }
 
-void json_object::push_back(int &value)
+void json_object::push_back(void *objectData, int refTypeId)
 {
-    object.push_back(value);
-}
+    int jsonType = scriptEngine->GetTypeInfoByName("json")->GetTypeId();
+    int stringType = scriptEngine->GetTypeInfoByName("string")->GetTypeId();
 
-void json_object::push_back(const nlohmann::json &value)
-{
-    
-}
-
-void json_object::push_back(nlohmann::json &&value)
-{
-
-}
-
-void json_object::push_back(const nlohmann::json &&value) 
-{
+    if(refTypeId == asTYPEID_INT32)
+    {
+        int* value = static_cast<int*>(objectData);
+        object.push_back(*value);
+    }
+    if(refTypeId == asTYPEID_INT64)
+    {
+        long long* value = static_cast<long long*>(objectData);
+        object.push_back(*value);
+    }
+    if(refTypeId == asTYPEID_DOUBLE)
+    {
+        double* value = static_cast<double*>(objectData);
+        object.push_back(*value);
+    }
+    if(refTypeId == asTYPEID_FLOAT)
+    {
+        float* value = static_cast<float*>(objectData);
+        object.push_back(*value);
+    }
+    if(refTypeId == jsonType)
+    {
+        json_object* value = static_cast<json_object*>(objectData);
+        object.push_back(value->object);
+    }
+    if(refTypeId == stringType)
+    {
+        std::string* value = static_cast<std::string*>(objectData);
+        object.push_back(*value);
+    }
 
 }
 
@@ -162,8 +191,9 @@ void register_json_native(asIScriptEngine *&engine)
     retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_GETGCFLAG, "bool f()", asMETHOD(json_object,get_flag), asCALL_THISCALL); assert( retCode >= 0 );
 
     //methods
-    retCode = engine->RegisterObjectMethod("json", "void push_back(int&in)", asMETHODPR(json_object,push_back,(int&),void), asCALL_THISCALL); assert(retCode >= 0);
+    retCode = engine->RegisterObjectMethod("json", "void push_back(?&in)", asMETHODPR(json_object,push_back,(void *, int),void), asCALL_THISCALL); assert(retCode >= 0);
     retCode = engine->RegisterObjectMethod("json", "void print()", asMETHOD(json_object,print), asCALL_THISCALL); assert(retCode >= 0);
+    retCode = engine->RegisterObjectMethod("json", "json &opAssign(json&in)", asFUNCTION(json_assignment_generic), asCALL_GENERIC); assert( retCode >= 0 );
 }
 
 void register_json_generic(asIScriptEngine *&engine)
@@ -183,6 +213,7 @@ void register_json_generic(asIScriptEngine *&engine)
     retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_ENUMREFS, "void f(int&in)", asFUNCTION(json_enum_references_generic), asCALL_GENERIC); assert( retCode >= 0 );
 	retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_RELEASEREFS, "void f(int&in)", asFUNCTION(json_release_all_handles_generic), asCALL_GENERIC); assert( retCode >= 0 );
 
-    retCode = engine->RegisterObjectMethod("json", "void push_back(int&in)", asFUNCTION(json_push_back_generic), asCALL_GENERIC); assert(retCode >= 0);
+    retCode = engine->RegisterObjectMethod("json", "void push_back(?&in)", asFUNCTION(json_push_back_generic), asCALL_GENERIC); assert(retCode >= 0);
     retCode = engine->RegisterObjectMethod("json", "void print()", asFUNCTION(json_print_generic), asCALL_GENERIC); assert(retCode >= 0);
+    retCode = engine->RegisterObjectMethod("json", "json &opAssign(json&in)", asFUNCTION(json_assignment_generic), asCALL_GENERIC); assert( retCode >= 0 );
 }

@@ -20,10 +20,7 @@ public:
     //void EnumReferences(asIScriptEngine *engine);
 	//void ReleaseAllHandles(asIScriptEngine *engine);
 
-    void push_back(int& value);
-    void push_back(const nlohmann::json & value);
-    void push_back(nlohmann::json&& value);
-    void push_back(const nlohmann::json&& value);
+    void push_back(void *objectData, int refTypeId);
     
     void print();
 
@@ -32,6 +29,7 @@ protected:
     mutable int refCounter;
     mutable bool gcFlag;
 
+    asIScriptEngine *scriptEngine;
     nlohmann::json object;
 };
 

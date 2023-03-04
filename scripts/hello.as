@@ -55,11 +55,16 @@ void main()
     object_data value = object_data("A3_Cargo_Truck_F", price);
 
     value.print_data();
-
+    json embedded;
+    embedded.push_back("Hello World!");
     json test;
     test.push_back(10);
     test.push_back(20);
     test.push_back(15);
+    test.push_back("string");
+    test.push_back(43.421);
+    test.push_back(6643.145561f);
+    test.push_back(embedded);
     test.print();
     
 }
