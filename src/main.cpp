@@ -222,7 +222,7 @@ void configEngine(asIScriptEngine *&engine)
     // Look at the implementation for this function for more information  
 	// on how to register a custom string type, and other object types.
     RegisterStdString(engine);
-    register_json_native(engine);
+    register_json(engine);
 
     if(!strstr(asGetLibraryOptions(), "AS_MAX_PORTABILITY"))
     {

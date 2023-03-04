@@ -55,5 +55,7 @@ void main()
     object_data value = object_data("A3_Cargo_Truck_F", price);
 
     value.print_data();
+
+    json test;
     
 }

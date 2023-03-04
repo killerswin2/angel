@@ -17,6 +17,9 @@ public:
     int  get_ref_count();
 	bool get_flag();
     void set_flag();
+    //void EnumReferences(asIScriptEngine *engine);
+	//void ReleaseAllHandles(asIScriptEngine *engine);
+
     void push_back(nlohmann::json & value);
     void push_back(const nlohmann::json & value);
     void push_back(nlohmann::json&& value);
@@ -32,4 +35,6 @@ protected:
 
 
 //registration stuff
+void register_json(asIScriptEngine *&engine);
 void register_json_native(asIScriptEngine *&engine);
+void register_json_generic(asIScriptEngine *&engine);
