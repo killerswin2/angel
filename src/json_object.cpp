@@ -49,6 +49,18 @@ static void json_release_all_handles_generic(asIScriptGeneric *gen)
 
 }
 
+static void json_push_back_generic(asIScriptGeneric *gen)
+{
+    json_object *self = static_cast<json_object*>(gen->GetObject());
+    int *number = static_cast<int*>(gen->GetArgAddress(0));
+    self->push_back(*number);
+}
+
+static void json_print_generic(asIScriptGeneric *gen)
+{
+    static_cast<json_object*>(gen->GetObject())->print();
+}
+
 json_object::json_object(asIScriptEngine *&engine)
 {
     std::cout << "Json Object created!\n";
@@ -95,20 +107,33 @@ void json_object::set_flag() {
     gcFlag = true;
 }
 
-
-void json_object::push_back(nlohmann::json &value)
+void json_object::push_back(int &value)
 {
+    object.push_back(value);
+}
+
+void json_object::push_back(const nlohmann::json &value)
+{
+    
 }
 
 void json_object::push_back(nlohmann::json &&value)
 {
-}
-
-void json_object::push_back(const nlohmann::json &&value) {
 
 }
 
-json_object::~json_object() {
+void json_object::push_back(const nlohmann::json &&value) 
+{
+
+}
+
+void json_object::print()
+{
+    std::cout << object.dump() << "\n";
+}
+
+json_object::~json_object() 
+{
 
 }
 
@@ -135,6 +160,10 @@ void register_json_native(asIScriptEngine *&engine)
     retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_GETREFCOUNT, "int f()", asMETHOD(json_object,get_ref_count), asCALL_THISCALL); assert( retCode >= 0 );
     retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_SETGCFLAG, "void f()", asMETHOD(json_object,set_flag), asCALL_THISCALL); assert( retCode >= 0 );
     retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_GETGCFLAG, "bool f()", asMETHOD(json_object,get_flag), asCALL_THISCALL); assert( retCode >= 0 );
+
+    //methods
+    retCode = engine->RegisterObjectMethod("json", "void push_back(int&in)", asMETHODPR(json_object,push_back,(int&),void), asCALL_THISCALL); assert(retCode >= 0);
+    retCode = engine->RegisterObjectMethod("json", "void print()", asMETHOD(json_object,print), asCALL_THISCALL); assert(retCode >= 0);
 }
 
 void register_json_generic(asIScriptEngine *&engine)
@@ -153,4 +182,7 @@ void register_json_generic(asIScriptEngine *&engine)
     retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_GETGCFLAG, "bool f()", asFUNCTION(json_get_flag_generic), asCALL_GENERIC); assert( retCode >= 0 );
     retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_ENUMREFS, "void f(int&in)", asFUNCTION(json_enum_references_generic), asCALL_GENERIC); assert( retCode >= 0 );
 	retCode = engine->RegisterObjectBehaviour("json", asBEHAVE_RELEASEREFS, "void f(int&in)", asFUNCTION(json_release_all_handles_generic), asCALL_GENERIC); assert( retCode >= 0 );
+
+    retCode = engine->RegisterObjectMethod("json", "void push_back(int&in)", asFUNCTION(json_push_back_generic), asCALL_GENERIC); assert(retCode >= 0);
+    retCode = engine->RegisterObjectMethod("json", "void print()", asFUNCTION(json_print_generic), asCALL_GENERIC); assert(retCode >= 0);
 }

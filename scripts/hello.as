@@ -57,5 +57,9 @@ void main()
     value.print_data();
 
     json test;
+    test.push_back(10);
+    test.push_back(20);
+    test.push_back(15);
+    test.print();
     
 }

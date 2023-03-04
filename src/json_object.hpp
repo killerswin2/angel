@@ -20,10 +20,12 @@ public:
     //void EnumReferences(asIScriptEngine *engine);
 	//void ReleaseAllHandles(asIScriptEngine *engine);
 
-    void push_back(nlohmann::json & value);
+    void push_back(int& value);
     void push_back(const nlohmann::json & value);
     void push_back(nlohmann::json&& value);
     void push_back(const nlohmann::json&& value);
+    
+    void print();
 
 protected:
     virtual ~json_object();
